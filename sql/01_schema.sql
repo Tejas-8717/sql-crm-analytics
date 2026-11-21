@@ -1,16 +1,10 @@
--- =====================================================
 -- CRM Project - 01_schema.sql
--- MySQL 8.0.16+ (CHECK constraints are enforced)
--- Lifecycle: Lead -> Contact -> Customer -> Opportunity
--- =====================================================
-
 DROP DATABASE IF EXISTS crm_db;
 CREATE DATABASE crm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE crm_db;
 
--- -----------------------------------------------------
--- 1. users: sales reps and admins
--- -----------------------------------------------------
+
+-- users: sales reps and admins
 CREATE TABLE users (
     user_id     INT AUTO_INCREMENT PRIMARY KEY,
     full_name   VARCHAR(100) NOT NULL,
@@ -20,9 +14,7 @@ CREATE TABLE users (
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 2. companies: organizations that contacts belong to
--- -----------------------------------------------------
 CREATE TABLE companies (
     company_id  INT AUTO_INCREMENT PRIMARY KEY,
     name        VARCHAR(150) NOT NULL,
@@ -34,9 +26,7 @@ CREATE TABLE companies (
     INDEX idx_companies_name (name)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 3. leads: raw, unqualified prospects
--- -----------------------------------------------------
 CREATE TABLE leads (
     lead_id       INT AUTO_INCREMENT PRIMARY KEY,
     full_name     VARCHAR(100) NOT NULL,
@@ -55,10 +45,7 @@ CREATE TABLE leads (
     INDEX idx_leads_owner (owner_id)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 4. contacts: a qualified lead becomes a contact
---    lead_id keeps the link back to the origin lead
--- -----------------------------------------------------
 CREATE TABLE contacts (
     contact_id  INT AUTO_INCREMENT PRIMARY KEY,
     lead_id     INT UNIQUE,
@@ -77,9 +64,7 @@ CREATE TABLE contacts (
     INDEX idx_contacts_owner (owner_id)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 5. customers: a contact who has bought (or is buying)
--- -----------------------------------------------------
 CREATE TABLE customers (
     customer_id        INT AUTO_INCREMENT PRIMARY KEY,
     contact_id         INT NOT NULL UNIQUE,
@@ -96,9 +81,7 @@ CREATE TABLE customers (
     INDEX idx_customers_owner (owner_id)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 6. opportunity_stages: lookup table for the pipeline
--- -----------------------------------------------------
 CREATE TABLE opportunity_stages (
     stage_id         INT AUTO_INCREMENT PRIMARY KEY,
     stage_name       VARCHAR(50) NOT NULL UNIQUE,
@@ -109,9 +92,7 @@ CREATE TABLE opportunity_stages (
     CONSTRAINT chk_won_requires_closed CHECK (is_won = FALSE OR is_closed = TRUE)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 7. opportunities: sales deals tied to customers
--- -----------------------------------------------------
 CREATE TABLE opportunities (
     opp_id       INT AUTO_INCREMENT PRIMARY KEY,
     customer_id  INT NOT NULL,
@@ -131,10 +112,8 @@ CREATE TABLE opportunities (
     INDEX idx_opps_close_date (close_date)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 8. activities: calls, emails, meetings, notes
 --    Each activity links to at least one record
--- -----------------------------------------------------
 CREATE TABLE activities (
     activity_id    INT AUTO_INCREMENT PRIMARY KEY,
     activity_type  ENUM('call','email','meeting','note','task') NOT NULL,
@@ -164,9 +143,7 @@ CREATE TABLE activities (
     INDEX idx_act_opp (opp_id)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- 9. audit_log: filled by triggers (see 04_procedures_triggers.sql)
--- -----------------------------------------------------
 CREATE TABLE audit_log (
     log_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
     table_name  VARCHAR(50) NOT NULL,
@@ -179,9 +156,7 @@ CREATE TABLE audit_log (
     INDEX idx_audit_changed_at (changed_at)
 ) ENGINE=InnoDB;
 
--- -----------------------------------------------------
 -- Reference data: pipeline stages
--- -----------------------------------------------------
 INSERT INTO opportunity_stages (stage_name, stage_order, win_probability, is_closed, is_won) VALUES
     ('New',        1,  10.00, FALSE, FALSE),
     ('Qualified',  2,  30.00, FALSE, FALSE),
