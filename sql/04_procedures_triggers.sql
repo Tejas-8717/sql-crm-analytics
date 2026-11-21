@@ -1,6 +1,3 @@
--- CRM Project - 04_procedures_triggers.sql
--- Stored procedure + transaction, and audit triggers.
--- Safe to re-run.
 USE crm_db;
 
 DROP PROCEDURE IF EXISTS convert_lead_to_customer;
@@ -29,7 +26,6 @@ BEGIN
     DECLARE v_status  VARCHAR(20);
     DECLARE v_contact INT;
 
-    -- On ANY SQL error: undo everything, then re-raise the error
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -38,7 +34,6 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Lock the lead row so two people can't convert it at the same time
     SELECT full_name, email, phone, owner_id, status
       INTO v_name, v_email, v_phone, v_owner, v_status
       FROM leads
@@ -136,33 +131,3 @@ BEGIN
 END //
 
 DELIMITER ;
-
--- =====================================================
--- TESTS (run these ONE AT A TIME after the file above)
--- =====================================================
-
--- Test 1: successful conversion
---   (a) pick a lead that is not converted yet
--- SELECT lead_id, full_name, status FROM leads WHERE status IN ('new','contacted','qualified') LIMIT 1;
---   (b) convert it (replace 5 with your lead_id; company 1 exists)
--- CALL convert_lead_to_customer(5, 1, 'Manager', @new_customer_id);
--- SELECT @new_customer_id;
---   (c) check all 4 effects
--- SELECT * FROM leads     WHERE lead_id = 5;
--- SELECT * FROM contacts  WHERE lead_id = 5;
--- SELECT * FROM customers WHERE customer_id = @new_customer_id;
--- SELECT * FROM audit_log ORDER BY log_id DESC LIMIT 5;
-
--- Test 2: converting the SAME lead again must FAIL
--- CALL convert_lead_to_customer(5, 1, 'Manager', @x);   -- "Lead is already converted"
-
--- Test 3: ROLLBACK proof. Company 99999 does not exist -> the foreign key fails
---         halfway through, and nothing should be left behind.
---   (replace 7 with another unconverted lead_id)
--- CALL convert_lead_to_customer(7, 99999, 'Manager', @x);   -- FK error
--- SELECT status FROM leads WHERE lead_id = 7;               -- still NOT 'converted'
--- SELECT * FROM contacts WHERE lead_id = 7;                 -- no rows
-
--- Test 4: trigger
--- UPDATE opportunities SET amount = amount + 100 WHERE opp_id = 1;
--- SELECT * FROM audit_log WHERE table_name = 'opportunities' ORDER BY log_id DESC LIMIT 3;
