@@ -1,7 +1,3 @@
--- CRM Project - 03_views.sql
--- Views save your best queries under a name so the
--- Safe to re-run (CREATE OR REPLACE).
-
 USE crm_db;
 
 -- Every opportunity with customer, company, stage and owner details
