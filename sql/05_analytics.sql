@@ -1,14 +1,7 @@
--- =====================================================
--- CRM Project - 05_analytics.sql
--- Part A: Joins     Part B: Aggregations
--- Run ONE query at a time: click inside it, then use the
--- second lightning bolt (executes the current statement).
--- =====================================================
+
 USE crm_db;
 
--- =====================================================
 -- PART A: JOINS
--- =====================================================
 
 -- A1. Top 20 opportunities with customer, company, stage and owner
 --     (INNER JOIN for required links, LEFT JOIN for optional ones)
@@ -50,9 +43,7 @@ WHERE a.activity_id IS NULL
 ORDER BY l.created_at
 LIMIT 20;
 
--- =====================================================
 -- PART B: AGGREGATIONS
--- =====================================================
 
 -- B1. Lead conversion rate by source
 --     SUM(condition) counts rows where the condition is true
@@ -97,11 +88,3 @@ FROM opportunity_stages s
 LEFT JOIN opportunities o ON o.stage_id = s.stage_id
 GROUP BY s.stage_id, s.stage_name, s.stage_order
 ORDER BY s.stage_order;
-
--- =====================================================
--- YOUR PRACTICE TASKS (write these yourself)
--- =====================================================
--- T1. List customers (name + company) who have NO opportunities.
--- T2. Count leads per owner (rep name) and per status.
--- T3. Which lead source produced the most WON revenue?
---     Hint: leads -> contacts -> customers -> opportunities
